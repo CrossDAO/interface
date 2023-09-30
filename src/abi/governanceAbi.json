@@ -616,9 +616,9 @@
         "type": "address"
       },
       {
-        "internalType": "bytes32",
-        "name": "descriptionHash",
-        "type": "bytes32"
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
       },
       {
         "internalType": "bool",

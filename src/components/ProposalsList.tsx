@@ -15,21 +15,6 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import governanceAbi from "@/abi/governanceAbi.json";
 
-const items = [
-  {
-    id: 1,
-    title: "Proposal 1",
-    description: "Lorem Ipsum",
-    chainId: 80001,
-  },
-  {
-    id: 2,
-    title: "Proposal 2",
-    description: "Lorem Ipsum",
-    chainId: 43113,
-  },
-];
-
 const ProposalsList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -46,10 +31,12 @@ const ProposalsList = () => {
   } = useQuery({
     queryKey: ["proposals"],
     queryFn: async () => {
-      return axios.get("/api/proposals").catch((err) => {
+      const response = await axios.get("/api/proposals").catch((err) => {
         console.error(err);
-        return [];
+        return { data: [] };
       });
+
+      return response.data;
     },
   });
 
@@ -63,21 +50,22 @@ const ProposalsList = () => {
         address: governanceContract[chain.id],
         abi: governanceAbi as Abi,
         functionName: "createProposal",
-        args: [[], [], [], `${title}-${description}`],
+        args: [[], [], [], `${title}:${description}`],
       });
 
       const { hash } = await writeContract(request);
 
       await waitForTransaction({ hash });
 
-      toast.success("Vote submitted");
+      toast.success("Proposal created");
 
       refetchProposals();
     } catch (err) {
       console.error(err);
-      toast.error("Something went wrong", { id: "vote-error" });
+      toast.error("Something went wrong", { id: "create-error" });
     } finally {
       setIsCreating(false);
+      setIsModalOpen(false);
     }
   }, [chain, description, refetchProposals, title]);
 
@@ -104,7 +92,7 @@ const ProposalsList = () => {
           <PlusIcon className="w-6 h-6" /> Create new Proposal
         </button>
 
-        {items.map((item, i) => (
+        {proposals?.map((item: any, i: number) => (
           <Proposal
             key={i}
             proposal={item}

@@ -10,12 +10,21 @@ import {
 } from "wagmi/actions";
 import { Abi } from "viem";
 import { useNetwork } from "wagmi";
+import governanceAbi from "@/abi/governanceAbi.json";
+import { avalancheFuji, polygonMumbai } from "viem/chains";
+
+const chainSelectors = {
+  [polygonMumbai.id]: "12532609583862916517",
+  [avalancheFuji.id]: "14767482510784806043",
+};
 
 export interface IProposal {
   id: number;
   title: string;
   description: string;
   chainId: number;
+  baseChainVotes: string[];
+  otherChainVotes: string[];
 }
 
 interface ProposalProps {
@@ -38,9 +47,23 @@ const Proposal = ({ refetchProposals, proposal }: ProposalProps) => {
       try {
         const { request } = await prepareWriteContract({
           address: governanceContract[chain.id],
-          abi: [] as Abi,
-          functionName: "vote",
-          args: [],
+          abi: governanceAbi as Abi,
+          ...(chain.id === proposal.chainId
+            ? {
+                functionName: "voteOnBaseProposal",
+                args: [proposal.id, vote ? 0 : 1, 1],
+              }
+            : {
+                functionName: "voteOnCrossChainProposal",
+                args: [
+                  chainSelectors[
+                    proposal.chainId as keyof typeof chainSelectors
+                  ],
+                  proposal.id,
+                  vote ? 0 : 1,
+                  1,
+                ],
+              }),
         });
 
         const { hash } = await writeContract(request);
@@ -51,12 +74,14 @@ const Proposal = ({ refetchProposals, proposal }: ProposalProps) => {
 
         refetchProposals();
       } catch (err) {
+        console.error(err);
         toast.error("Something went wrong", { id: "vote-error" });
       } finally {
         setIsLoading(false);
+        setIsModalOpen(false);
       }
     },
-    [chain, refetchProposals]
+    [chain, proposal, refetchProposals]
   );
 
   const chainImage = chainLogos[proposal.chainId as keyof typeof chainLogos];
@@ -74,11 +99,15 @@ const Proposal = ({ refetchProposals, proposal }: ProposalProps) => {
                 <Image src={chainImage} width={30} height={30} alt="" />
               ) : null}
             </div>
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col gap-2">
               <h2 className="text-2xl font-bold text-purple-400">
                 {proposal.title}
               </h2>
-              <p className="text-xl my-2 text-white">{proposal.description}</p>
+              <p className="text-xl  text-white">{proposal.description}</p>
+            </div>
+            <div className="text-right">
+              <p>Base Chain votes: {proposal.baseChainVotes?.[0] || 0}</p>
+              <p>Other Chains votes: {proposal.otherChainVotes?.[0] || 0}</p>
             </div>
           </div>
         </div>

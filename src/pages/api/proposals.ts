@@ -10,6 +10,10 @@ const avalancheFuji = new ethers.JsonRpcProvider(
   `https://avalanche-fuji.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_API_KEY}`
 );
 
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse
@@ -32,19 +36,38 @@ export default async function handle(
     const fujiProposals = [];
     for (let i = 0; i < Number(fujiTotalProposals); i++) {
       const proposal = await fujiContract.baseProposals(i);
-      fujiProposals.push({ ...proposal, chainId: 43113 });
+      const [title, description] = proposal[2].split(":");
+
+      fujiProposals.push({
+        id: proposal[0],
+        title,
+        description,
+        baseChainVotes: proposal[7],
+        otherChainVotes: proposal[8],
+        chainId: 43113,
+      });
     }
 
     const mumbaiProposals = [];
     for (let i = 0; i < Number(mumbaiTotalProposals); i++) {
       const proposal = await mumbaiContract.baseProposals(i);
-      mumbaiProposals.push({ ...proposal, chainId: 80001 });
+      const [title, description] = proposal[2].split(":");
+      console.log(proposal);
+      mumbaiProposals.push({
+        id: proposal[0],
+        title,
+        description,
+        baseChainVotes: proposal[7],
+        otherChainVotes: proposal[8],
+        chainId: 80001,
+      });
     }
 
     const proposals = [...fujiProposals, ...mumbaiProposals];
 
     return res.json(proposals);
   } catch (error) {
+    console.error(error);
     return res.status(500).json(error);
   }
 }
