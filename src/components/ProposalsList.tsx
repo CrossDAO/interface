@@ -79,14 +79,14 @@ const ProposalsList = () => {
 
   return (
     <>
-      <div className="gap-4 flex flex-col">
+      <div className="gap-4 flex flex-col pb-10">
         <h2 className="text-center">
           <span className="text-5xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-400">
             Proposals
           </span>
         </h2>
         <button
-          className="bg-purple-600 mt-10 flex-1 text-white px-4 py-2 rounded hover:bg-purple-700 text-center flex gap-2 justify-center"
+          className="bg-purple-600 mt-10 flex-1 text-white px-4 py-2 mb-4 rounded hover:bg-purple-700 text-center flex gap-2 justify-center"
           onClick={() => setIsModalOpen(true)}
         >
           <PlusIcon className="w-6 h-6" /> Create new Proposal
