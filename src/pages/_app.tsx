@@ -12,7 +12,6 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <WagmiConfig config={wagmiConfig}>
       <RainbowKitProvider chains={chains}>
-        <Header />
         <Component {...pageProps} />
       </RainbowKitProvider>
     </WagmiConfig>

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.0.18",
     "@rainbow-me/rainbowkit": "^1.0.11",
     "daisyui": "^3.8.2",
     "next": "latest",

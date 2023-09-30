@@ -7,12 +7,12 @@ const Header = () => {
   if (!hasHydrated) return null;
 
   return (
-    <div className="navbar bg-base-100">
+    <div className="navbar">
       <div className="navbar-start">
-        <a className="btn btn-ghost normal-case text-xl">CrossDAO</a>
+        <a className="btn btn-ghost normal-case text-xl text-white">CrossDAO</a>
       </div>
       <div className="navbar-center hidden lg:flex">
-        <ul className="menu menu-horizontal px-1">
+        {/* <ul className="menu menu-horizontal px-1">
           <li>
             <a>Proposals list</a>
           </li>
@@ -20,7 +20,7 @@ const Header = () => {
           <li>
             <a>Create Proposal</a>
           </li>
-        </ul>
+        </ul> */}
       </div>
       <div className="navbar-end">
         <ConnectButton />
