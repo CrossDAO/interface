@@ -1,22 +1,32 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Proposal from "./ProposalItem";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Spinner from "./Spinner";
-import { sepolia } from "wagmi";
-import { optimismGoerli } from "viem/chains";
+import { useNetwork } from "wagmi";
+import toast from "react-hot-toast";
+import { Abi } from "viem";
+import {
+  prepareWriteContract,
+  waitForTransaction,
+  writeContract,
+} from "wagmi/actions";
+import { governanceContract } from "@/constants";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import governanceAbi from "@/abi/governanceAbi.json";
 
 const items = [
   {
     id: 1,
     title: "Proposal 1",
     description: "Lorem Ipsum",
-    chainId: 420,
+    chainId: 80001,
   },
   {
     id: 2,
     title: "Proposal 2",
     description: "Lorem Ipsum",
-    chainId: 11155111,
+    chainId: 43113,
   },
 ];
 
@@ -27,11 +37,57 @@ const ProposalsList = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  const handleCreateProposalTransaction = async () => {};
+  const { chain } = useNetwork();
 
-  const handleVoteTransaction = (vote: boolean) => {
-    console.log(vote);
-  };
+  const {
+    data: proposals = [],
+    isLoading: isFetchingProposals,
+    refetch: refetchProposals,
+  } = useQuery({
+    queryKey: ["proposals"],
+    queryFn: async () => {
+      return axios.get("/api/proposals").catch((err) => {
+        console.error(err);
+        return [];
+      });
+    },
+  });
+
+  const handleCreateProposalTransaction = useCallback(async () => {
+    if (!chain?.id) return;
+
+    setIsCreating(true);
+
+    try {
+      const { request } = await prepareWriteContract({
+        address: governanceContract[chain.id],
+        abi: governanceAbi as Abi,
+        functionName: "createProposal",
+        args: [[], [], [], `${title}-${description}`],
+      });
+
+      const { hash } = await writeContract(request);
+
+      await waitForTransaction({ hash });
+
+      toast.success("Vote submitted");
+
+      refetchProposals();
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong", { id: "vote-error" });
+    } finally {
+      setIsCreating(false);
+    }
+  }, [chain, description, refetchProposals, title]);
+
+  if (isFetchingProposals) {
+    return (
+      <div className="flex items-center flex-col flex-grow pt-10 max-w-5xl m-auto w-full">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -49,12 +105,16 @@ const ProposalsList = () => {
         </button>
 
         {items.map((item, i) => (
-          <Proposal key={i} proposal={item} onVote={handleVoteTransaction} />
+          <Proposal
+            key={i}
+            proposal={item}
+            refetchProposals={refetchProposals}
+          />
         ))}
       </div>
 
       <div className={`modal ${isModalOpen ? "modal-open" : ""}`}>
-        <div className="modal-box w-full max-w-xl flex items-center flex-col">
+        <div className="modal-box w-full max-w-xl flex items-center flex-col bg-blue-950 text-white shadow-md">
           <button
             className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
             onClick={() => setIsModalOpen(false)}
@@ -68,13 +128,13 @@ const ProposalsList = () => {
               type="text"
               value={title}
               placeholder="Title"
-              className="rounded input input-bordered w-full"
+              className="rounded input input-bordered w-full bg-transparent"
               onChange={(e) => setTitle(e.target.value)}
             />
             <textarea
               value={description}
               placeholder="Description"
-              className="rounded input input-bordered w-full py-2 h-20"
+              className="rounded input input-bordered w-full py-2 h-20 bg-transparent"
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
@@ -91,12 +151,6 @@ const ProposalsList = () => {
                   onClick={() => handleCreateProposalTransaction()}
                 >
                   Submit
-                </button>
-                <button
-                  className="bg-blue-600 flex-1 px-4 py-2 rounded text-white hover:bg-blue-700 text-center"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Close
                 </button>
               </>
             )}
