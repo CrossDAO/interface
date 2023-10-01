@@ -38,12 +38,19 @@ export default async function handle(
       const proposal = await fujiContract.baseProposals(i);
       const [title, description] = proposal[2].split(":");
 
+      const crossChainVotes = (
+        await mumbaiContract.crossChainProposals(
+          "14767482510784806043",
+          proposal[0]
+        )
+      )[5];
+
       fujiProposals.push({
         id: proposal[0],
         title,
         description,
         baseChainVotes: proposal[7],
-        otherChainVotes: proposal[8],
+        otherChainVotes: crossChainVotes,
         chainId: 43113,
       });
     }
@@ -52,13 +59,20 @@ export default async function handle(
     for (let i = 0; i < Number(mumbaiTotalProposals); i++) {
       const proposal = await mumbaiContract.baseProposals(i);
       const [title, description] = proposal[2].split(":");
-      console.log(proposal);
+
+      const crossChainVotes = (
+        await fujiContract.crossChainProposals(
+          "12532609583862916517",
+          proposal[0]
+        )
+      )[5];
+
       mumbaiProposals.push({
         id: proposal[0],
         title,
         description,
         baseChainVotes: proposal[7],
-        otherChainVotes: proposal[8],
+        otherChainVotes: crossChainVotes,
         chainId: 80001,
       });
     }
