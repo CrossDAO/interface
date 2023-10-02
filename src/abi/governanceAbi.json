@@ -769,6 +769,13 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "countVotesAndCloseProposals",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address[]",
